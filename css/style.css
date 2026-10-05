@@ -431,6 +431,127 @@ body.is-party {
   border-radius: 4px;
 }
 
+.link-btn {
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: var(--purple);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* ---------- Dialogs (GitHub token, publish result) ---------- */
+
+.dialog {
+  width: min(520px, calc(100% - 32px));
+  max-height: calc(100% - 32px);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius);
+  color: var(--ink);
+  background: var(--surface);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+}
+
+.dialog::backdrop {
+  background: rgba(20, 10, 40, 0.6);
+}
+
+.dialog__body {
+  display: grid;
+  gap: 12px;
+  padding: 24px;
+  font-size: 0.95rem;
+}
+
+.dialog__body p {
+  margin: 0;
+}
+
+.dialog__body code {
+  background: #f5edff;
+  padding: 0.1em 0.4em;
+  border-radius: 4px;
+  font-size: 0.9em;
+  overflow-wrap: anywhere;
+}
+
+.dialog__body a {
+  color: var(--purple);
+}
+
+.dialog__title {
+  margin: 0;
+  font-size: 1.3rem;
+}
+
+.dialog__steps {
+  margin: 0;
+  padding-left: 1.3em;
+  display: grid;
+  gap: 6px;
+}
+
+.dialog__label {
+  font-weight: 600;
+}
+
+.dialog input[type="password"],
+.dialog input[type="text"] {
+  width: 100%;
+  font: inherit;
+  padding: 0.7em 0.9em;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  background: #fcfaff;
+  color: var(--ink);
+}
+
+.dialog input:focus {
+  outline: none;
+  border-color: var(--purple);
+}
+
+.dialog__check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dialog__note {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.dialog__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.dialog__actions .link-btn {
+  margin-right: auto;
+  font-size: 0.85rem;
+}
+
+.share-link {
+  display: flex;
+  gap: 8px;
+}
+
+.share-link input {
+  min-width: 0;
+  flex: 1;
+}
+
+.share-link .btn {
+  padding: 0.6em 1.2em;
+}
+
 /* ---------- Status (shared link loading / not found) ---------- */
 
 .status {
@@ -453,6 +574,17 @@ body.is-party {
   margin: 0 0 8px;
   font-size: 1.15rem;
   font-weight: 600;
+}
+
+.status__open {
+  font-size: 1.2rem;
+  padding: 0.9em 2.2em;
+  animation: pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
 }
 
 /* ---------- Toast ---------- */

@@ -80,8 +80,9 @@
 
       <div class="form__actions">
         <button type="submit" class="btn btn--primary btn--block">Start the celebration 🎈</button>
-        <button type="button" class="btn btn--secondary btn--block" id="download-btn">⬇️ Download share file</button>
-        <p class="form__hint">The share file holds everything above. Add it to the site's <code>celebrations</code> folder to get a link you can send.</p>
+        <button type="button" class="btn btn--secondary btn--block" id="publish-btn">🚀 Publish &amp; get link</button>
+        <p class="form__hint">Saves the photos and wish to the site's GitHub repo and gives you a link to send.
+          <button type="button" class="link-btn" id="download-btn">Download as zip instead</button></p>
       </div>
     </form>
   </main>
@@ -90,6 +91,7 @@
   <main id="status" class="status" hidden>
     <p class="status__emoji" id="status-emoji" aria-hidden="true">🎁</p>
     <p class="status__text" id="status-text">Unwrapping your celebration…</p>
+    <button type="button" class="btn btn--primary status__open" id="status-open" hidden>🎁 Open it</button>
     <a class="btn btn--primary" id="status-link" href="./" hidden>Make a birthday page</a>
   </main>
 
@@ -100,7 +102,7 @@
 
     <div class="party__toolbar">
       <button type="button" class="btn btn--ghost" id="music-btn" aria-pressed="false">🎵 Play song</button>
-      <button type="button" class="btn btn--ghost" id="share-btn">⬇️ Share file</button>
+      <button type="button" class="btn btn--ghost" id="share-btn">🚀 Publish</button>
       <button type="button" class="btn btn--ghost" id="edit-btn">✏️ Edit</button>
       <button type="button" class="btn btn--ghost" id="new-btn">✨ New</button>
       <a class="btn btn--ghost" id="own-btn" href="./" hidden>🎁 Make your own</a>
@@ -145,6 +147,45 @@
   </div>
 
   <div class="toast" id="toast" role="status" hidden></div>
+
+  <!-- Asks for the GitHub token used to save celebrations into the repo -->
+  <dialog class="dialog" id="token-dialog" aria-labelledby="token-title">
+    <form method="dialog" class="dialog__body" id="token-form">
+      <h2 class="dialog__title" id="token-title">Connect to GitHub</h2>
+      <p>Publishing saves the photos and wish into the <code id="token-repo"></code> repo. It needs a GitHub token that can edit that repo.</p>
+      <ol class="dialog__steps">
+        <li>Open <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">GitHub → new fine-grained token</a>.</li>
+        <li>Under <strong>Repository access</strong>, pick <strong>Only select repositories</strong> and choose <code id="token-repo-name"></code>.</li>
+        <li>Under <strong>Permissions → Contents</strong>, choose <strong>Read and write</strong>. Generate it and paste it below.</li>
+      </ol>
+      <label class="dialog__label" for="token-input">GitHub token</label>
+      <input id="token-input" type="password" autocomplete="off" spellcheck="false" placeholder="github_pat_…" required>
+      <label class="dialog__check"><input type="checkbox" id="token-remember"> Remember on this device</label>
+      <p class="dialog__note">The token stays in this browser only and is sent to nobody but GitHub. Without “remember”, it's forgotten when you close the tab.</p>
+      <p class="error" id="token-error" hidden></p>
+      <div class="dialog__actions">
+        <button type="button" class="btn btn--secondary" id="token-cancel">Cancel</button>
+        <button type="submit" class="btn btn--primary" value="save">Publish</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Publishing progress and the resulting link -->
+  <dialog class="dialog" id="publish-dialog" aria-labelledby="publish-title">
+    <div class="dialog__body">
+      <h2 class="dialog__title" id="publish-title">Publishing…</h2>
+      <p id="publish-text">Uploading photos to GitHub…</p>
+      <div class="share-link" id="publish-link-row" hidden>
+        <input id="publish-link" type="text" readonly aria-label="Celebration link">
+        <button type="button" class="btn btn--primary" id="publish-copy">Copy</button>
+      </div>
+      <p class="dialog__note" id="publish-note" hidden></p>
+      <div class="dialog__actions">
+        <button type="button" class="link-btn" id="publish-forget" hidden>Forget saved token</button>
+        <button type="button" class="btn btn--secondary" id="publish-close">Close</button>
+      </div>
+    </div>
+  </dialog>
 
   <script src="js/app.js"></script>
 
