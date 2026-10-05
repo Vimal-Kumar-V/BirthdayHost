@@ -1,0 +1,133 @@
+<!doctype html>
+<html class="no-js" lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Birthday Host</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <meta name="description" content="Create a personalised birthday celebration page with photos and a wish.">
+
+  <meta property="og:title" content="Birthday Host">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="">
+  <meta property="og:image" content="">
+  <meta property="og:image:alt" content="">
+
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon.png">
+
+  <link rel="manifest" href="site.webmanifest">
+  <meta name="theme-color" content="#ff5c8a">
+</head>
+
+<body>
+
+  <canvas id="confetti" aria-hidden="true"></canvas>
+
+  <!-- ===================== Step 1: the form ===================== -->
+  <main id="setup" class="setup">
+    <header class="setup__header">
+      <span class="setup__emoji" aria-hidden="true">🎉</span>
+      <h1 class="setup__title">Birthday Host</h1>
+      <p class="setup__subtitle">Add a name, a few photos and your wish, and we'll throw the party.</p>
+    </header>
+
+    <form id="birthday-form" class="card form" novalidate>
+      <div class="field">
+        <label for="name">Birthday person's name <span class="req">*</span></label>
+        <input id="name" name="name" type="text" maxlength="40" placeholder="e.g. Priya" autocomplete="off" required>
+        <p class="error" id="name-error" hidden>Please enter a name.</p>
+      </div>
+
+      <div class="field">
+        <label for="age">Turning <span class="optional">(optional)</span></label>
+        <input id="age" name="age" type="number" min="1" max="120" placeholder="e.g. 25" inputmode="numeric">
+      </div>
+
+      <div class="field">
+        <span class="label" id="photos-label">Birthday photos <span class="optional">(up to 12)</span></span>
+        <label class="dropzone" id="dropzone" for="photos" aria-labelledby="photos-label">
+          <input id="photos" name="photos" type="file" accept="image/*" multiple class="visually-hidden">
+          <span class="dropzone__icon" aria-hidden="true">📸</span>
+          <span class="dropzone__text"><strong>Click to choose</strong> or drag photos here</span>
+        </label>
+        <ul class="previews" id="previews" aria-label="Selected photos"></ul>
+      </div>
+
+      <div class="field">
+        <label for="wish">Your birthday wish <span class="req">*</span></label>
+        <textarea id="wish" name="wish" rows="4" maxlength="600" placeholder="Write something from the heart…" required></textarea>
+        <div class="field__meta">
+          <div class="chips" aria-label="Wish ideas">
+            <button type="button" class="chip" data-wish="Wishing you a day filled with laughter, love and everything that makes you smile. Happy birthday!">💖 Heartfelt</button>
+            <button type="button" class="chip" data-wish="Another trip around the sun, and you still make it look easy. Have the best birthday ever!">☀️ Fun</button>
+            <button type="button" class="chip" data-wish="May this year bring you new adventures, big dreams come true, and cake. Lots of cake.">🎂 Cheeky</button>
+          </div>
+          <span class="counter" id="wish-count">0 / 600</span>
+        </div>
+        <p class="error" id="wish-error" hidden>Please write a wish.</p>
+      </div>
+
+      <button type="submit" class="btn btn--primary btn--block">Start the celebration 🎈</button>
+    </form>
+  </main>
+
+  <!-- ===================== Step 2: the celebration ===================== -->
+  <section id="party" class="party" hidden aria-live="polite">
+    <div class="bunting" id="bunting" aria-hidden="true"></div>
+    <div class="balloons" id="balloons" aria-hidden="true"></div>
+
+    <div class="party__toolbar">
+      <button type="button" class="btn btn--ghost" id="music-btn" aria-pressed="false">🎵 Play song</button>
+      <button type="button" class="btn btn--ghost" id="edit-btn">✏️ Edit</button>
+      <button type="button" class="btn btn--ghost" id="new-btn">✨ New</button>
+    </div>
+
+    <div class="party__content">
+      <p class="party__eyebrow">It's a celebration!</p>
+      <h2 class="party__title">
+        <span class="party__happy">Happy Birthday</span>
+        <span class="party__name" id="party-name"></span>
+      </h2>
+      <p class="party__age" id="party-age" hidden></p>
+
+      <div class="cake-wrap">
+        <div class="cake" id="cake" aria-hidden="true">
+          <div class="cake__candles" id="candles"></div>
+          <div class="cake__layer cake__layer--top"></div>
+          <div class="cake__layer cake__layer--mid"></div>
+          <div class="cake__layer cake__layer--bottom"></div>
+          <div class="cake__plate"></div>
+        </div>
+        <button type="button" class="btn btn--primary" id="blow-btn">🌬️ Make a wish &amp; blow!</button>
+      </div>
+
+      <article class="wish-card card">
+        <span class="wish-card__quote" aria-hidden="true">“</span>
+        <p class="wish-card__text" id="party-wish"></p>
+        <p class="wish-card__sign">With love 💌</p>
+      </article>
+
+      <section class="gallery" id="gallery-section" hidden>
+        <h3 class="gallery__title">Memories 📷</h3>
+        <ul class="gallery__grid" id="gallery"></ul>
+      </section>
+    </div>
+  </section>
+
+  <!-- Photo lightbox -->
+  <div class="lightbox" id="lightbox" hidden role="dialog" aria-modal="true" aria-label="Photo viewer">
+    <button type="button" class="lightbox__close" id="lightbox-close" aria-label="Close">×</button>
+    <img id="lightbox-img" alt="">
+  </div>
+
+  <script src="js/app.js"></script>
+
+</body>
+
+</html>
