@@ -73,8 +73,24 @@
         <p class="error" id="wish-error" hidden>Please write a wish.</p>
       </div>
 
-      <button type="submit" class="btn btn--primary btn--block">Start the celebration 🎈</button>
+      <div class="field">
+        <label for="from">From <span class="optional">(optional)</span></label>
+        <input id="from" name="from" type="text" maxlength="40" placeholder="Your name" autocomplete="off">
+      </div>
+
+      <div class="form__actions">
+        <button type="submit" class="btn btn--primary btn--block">Start the celebration 🎈</button>
+        <button type="button" class="btn btn--secondary btn--block" id="download-btn">⬇️ Download share file</button>
+        <p class="form__hint">The share file holds everything above. Add it to the site's <code>celebrations</code> folder to get a link you can send.</p>
+      </div>
     </form>
+  </main>
+
+  <!-- Shown while a shared celebration loads, or if it can't be found -->
+  <main id="status" class="status" hidden>
+    <p class="status__emoji" id="status-emoji" aria-hidden="true">🎁</p>
+    <p class="status__text" id="status-text">Unwrapping your celebration…</p>
+    <a class="btn btn--primary" id="status-link" href="./" hidden>Make a birthday page</a>
   </main>
 
   <!-- ===================== Step 2: the celebration ===================== -->
@@ -84,8 +100,10 @@
 
     <div class="party__toolbar">
       <button type="button" class="btn btn--ghost" id="music-btn" aria-pressed="false">🎵 Play song</button>
+      <button type="button" class="btn btn--ghost" id="share-btn">⬇️ Share file</button>
       <button type="button" class="btn btn--ghost" id="edit-btn">✏️ Edit</button>
       <button type="button" class="btn btn--ghost" id="new-btn">✨ New</button>
+      <a class="btn btn--ghost" id="own-btn" href="./" hidden>🎁 Make your own</a>
     </div>
 
     <div class="party__content">
@@ -110,7 +128,7 @@
       <article class="wish-card card">
         <span class="wish-card__quote" aria-hidden="true">“</span>
         <p class="wish-card__text" id="party-wish"></p>
-        <p class="wish-card__sign">With love 💌</p>
+        <p class="wish-card__sign" id="party-sign">With love 💌</p>
       </article>
 
       <section class="gallery" id="gallery-section" hidden>
@@ -125,6 +143,8 @@
     <button type="button" class="lightbox__close" id="lightbox-close" aria-label="Close">×</button>
     <img id="lightbox-img" alt="">
   </div>
+
+  <div class="toast" id="toast" role="status" hidden></div>
 
   <script src="js/app.js"></script>
 

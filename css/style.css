@@ -150,6 +150,7 @@ body.is-party {
   font: inherit;
   font-weight: 600;
   cursor: pointer;
+  text-decoration: none;
   transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
 }
 
@@ -395,6 +396,85 @@ body.is-party {
   font-size: 16px;
   line-height: 24px;
   cursor: pointer;
+}
+
+.btn--secondary {
+  color: var(--purple);
+  background: #f5edff;
+  border: 2px solid #e2d2fa;
+}
+
+.btn--secondary:hover {
+  background: #ede0ff;
+}
+
+.btn--secondary:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.form__actions {
+  display: grid;
+  gap: 10px;
+}
+
+.form__hint {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+  text-align: center;
+}
+
+.form__hint code {
+  background: #f5edff;
+  padding: 0.1em 0.4em;
+  border-radius: 4px;
+}
+
+/* ---------- Status (shared link loading / not found) ---------- */
+
+.status {
+  min-height: 100vh;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 12px;
+  padding: 16px;
+  text-align: center;
+}
+
+.status__emoji {
+  margin: 0;
+  font-size: 3.5rem;
+  animation: wiggle 1.2s ease-in-out infinite;
+}
+
+.status__text {
+  margin: 0 0 8px;
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+/* ---------- Toast ---------- */
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 20px;
+  z-index: 120;
+  transform: translateX(-50%);
+  width: min(560px, calc(100% - 32px));
+  padding: 14px 18px;
+  border-radius: 14px;
+  background: var(--ink);
+  color: #fff;
+  font-size: 0.9rem;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+  overflow-wrap: anywhere;
+}
+
+.toast code {
+  color: var(--yellow);
 }
 
 /* ---------- Party ---------- */

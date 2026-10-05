@@ -3,6 +3,10 @@
 
   const MAX_PHOTOS = 12;
   const MAX_CANDLES = 10;
+  // Share files embed photos, so shrink them to keep the file small.
+  const SHARE_PHOTO_MAX_SIDE = 1280;
+  const SHARE_PHOTO_QUALITY = 0.8;
+  const SLUG_PATTERN = /^[a-z0-9-]{1,60}$/;
   const COLORS = ['#ff5c8a', '#ffa34d', '#ffd23f', '#3ddc97', '#4cc9f0', '#9b5de5'];
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -20,10 +24,17 @@
     wish: $('wish'),
     wishError: $('wish-error'),
     wishCount: $('wish-count'),
+    from: $('from'),
+    downloadBtn: $('download-btn'),
+    status: $('status'),
+    statusEmoji: $('status-emoji'),
+    statusText: $('status-text'),
+    statusLink: $('status-link'),
     party: $('party'),
     partyName: $('party-name'),
     partyAge: $('party-age'),
     partyWish: $('party-wish'),
+    partySign: $('party-sign'),
     bunting: $('bunting'),
     balloons: $('balloons'),
     cake: $('cake'),
@@ -34,12 +45,15 @@
     musicBtn: $('music-btn'),
     editBtn: $('edit-btn'),
     newBtn: $('new-btn'),
+    shareBtn: $('share-btn'),
+    ownBtn: $('own-btn'),
+    toast: $('toast'),
     lightbox: $('lightbox'),
     lightboxImg: $('lightbox-img'),
     lightboxClose: $('lightbox-close'),
   };
 
-  /** Selected photos: { file, url } */
+  /** Photos to show: { file, url }. Photos from a share file have no `file`. */
   let photos = [];
 
   /* ------------------------------------------------------------------
@@ -58,8 +72,12 @@
     renderPreviews();
   }
 
+  function releasePhoto(p) {
+    if (p.file) URL.revokeObjectURL(p.url);
+  }
+
   function removePhoto(index) {
-    URL.revokeObjectURL(photos[index].url);
+    releasePhoto(photos[index]);
     photos.splice(index, 1);
     renderPreviews();
   }
@@ -128,27 +146,45 @@
     error.hidden = !invalid;
   }
 
-  els.form.addEventListener('submit', (e) => {
-    e.preventDefault();
+  /** Validates the form and returns its values, or null if something is missing. */
+  function readForm() {
     const name = els.name.value.trim();
     const wish = els.wish.value.trim();
     setInvalid(els.name, els.nameError, !name);
     setInvalid(els.wish, els.wishError, !wish);
-    if (!name) return els.name.focus();
-    if (!wish) return els.wish.focus();
-
+    if (!name) {
+      els.name.focus();
+      return null;
+    }
+    if (!wish) {
+      els.wish.focus();
+      return null;
+    }
     const age = parseInt(els.age.value, 10);
-    startParty({ name, wish, age: age > 0 ? age : null });
+    return { name, wish, age: age > 0 ? age : null, from: els.from.value.trim() };
+  }
+
+  els.form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const data = readForm();
+    if (data) startParty(data);
   });
 
   /* ------------------------------------------------------------------
    * Party
    * ---------------------------------------------------------------- */
 
-  function startParty({ name, wish, age }) {
+  function startParty({ name, wish, age, from }, { shared = false } = {}) {
     document.title = `Happy Birthday, ${name}! 🎉`;
     els.partyName.textContent = `${name}!`;
     els.partyWish.textContent = wish;
+    els.partySign.textContent = from ? `With love, ${from} 💌` : 'With love 💌';
+
+    // Someone opening a shared link only gets to enjoy it, not edit it.
+    els.shareBtn.hidden = shared;
+    els.editBtn.hidden = shared;
+    els.newBtn.hidden = shared;
+    els.ownBtn.hidden = !shared;
 
     els.partyAge.hidden = !age;
     if (age) els.partyAge.textContent = `🎈 Turning ${age} today 🎈`;
@@ -159,6 +195,7 @@
     buildGallery();
 
     els.setup.hidden = true;
+    els.status.hidden = true;
     els.party.hidden = false;
     document.body.classList.add('is-party');
     window.scrollTo({ top: 0 });
@@ -275,7 +312,7 @@
   els.newBtn.addEventListener('click', () => {
     endParty();
     els.form.reset();
-    photos.forEach((p) => URL.revokeObjectURL(p.url));
+    photos.forEach(releasePhoto);
     photos = [];
     renderPreviews();
     updateCount();
@@ -457,6 +494,145 @@
   })();
 
   els.musicBtn.addEventListener('click', () => song.toggle());
+
+  /* ------------------------------------------------------------------
+   * Sharing: a celebration is saved as celebrations/<slug>.json and
+   * opened with ?for=<slug>, so the site stays fully static.
+   * ---------------------------------------------------------------- */
+
+  function slugify(text) {
+    const slug = text
+      .normalize('NFKD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 40);
+    return slug || 'birthday';
+  }
+
+  function shareLink(slug) {
+    const url = new URL('./', window.location.href);
+    url.search = `?for=${slug}`;
+    return url.href;
+  }
+
+  /** Resizes an image file and returns it as a JPEG data URL. */
+  function shrinkPhoto(file) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const src = URL.createObjectURL(file);
+      img.onload = () => {
+        const scale = Math.min(1, SHARE_PHOTO_MAX_SIDE / Math.max(img.naturalWidth, img.naturalHeight));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(img.naturalWidth * scale);
+        canvas.height = Math.round(img.naturalHeight * scale);
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#fff'; // JPEG has no transparency
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        URL.revokeObjectURL(src);
+        resolve(canvas.toDataURL('image/jpeg', SHARE_PHOTO_QUALITY));
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(src);
+        reject(new Error(`Could not read ${file.name}`));
+      };
+      img.src = src;
+    });
+  }
+
+  let toastTimer = null;
+
+  function showToast(html) {
+    els.toast.innerHTML = html;
+    els.toast.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => {
+      els.toast.hidden = true;
+    }, 15000);
+  }
+
+  async function downloadShareFile() {
+    const data = readForm();
+    if (!data) {
+      if (!els.party.hidden) endParty();
+      return;
+    }
+    const buttons = [els.downloadBtn, els.shareBtn];
+    buttons.forEach((b) => (b.disabled = true));
+    try {
+      const shareable = photos.filter((p) => p.file || p.url.startsWith('data:'));
+      const images = await Promise.all(shareable.map((p) => (p.file ? shrinkPhoto(p.file) : p.url)));
+      const file = { version: 1, ...data, photos: images };
+      const slug = slugify(data.name);
+      const blob = new Blob([JSON.stringify(file)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `${slug}.json`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+      // slug only contains [a-z0-9-], so it is safe to put in HTML.
+      showToast(
+        `Saved <code>${slug}.json</code>. Put it in the <code>celebrations</code> folder and push. ` +
+          `Your link will be <code>${shareLink(slug)}</code>`,
+      );
+    } catch (err) {
+      alert(`Couldn't create the share file: ${err.message}`);
+    } finally {
+      buttons.forEach((b) => (b.disabled = false));
+    }
+  }
+
+  els.downloadBtn.addEventListener('click', downloadShareFile);
+  els.shareBtn.addEventListener('click', downloadShareFile);
+
+  function isText(value, max) {
+    return typeof value === 'string' && value.trim().length > 0 && value.length <= max;
+  }
+
+  /** Checks a share file's shape so a bad file can't break the page. */
+  function parseCelebration(json) {
+    if (!json || !isText(json.name, 40) || !isText(json.wish, 600)) return null;
+    const age = Number.isInteger(json.age) && json.age > 0 && json.age <= 120 ? json.age : null;
+    const from = isText(json.from, 40) ? json.from : '';
+    const list = Array.isArray(json.photos) ? json.photos : [];
+    const shared = list
+      .filter((src) => typeof src === 'string' && src.startsWith('data:image/'))
+      .slice(0, MAX_PHOTOS)
+      .map((url) => ({ url }));
+    return { celebration: { name: json.name.trim(), wish: json.wish.trim(), age, from }, photos: shared };
+  }
+
+  function showStatus(emoji, text, withLink) {
+    els.setup.hidden = true;
+    els.status.hidden = false;
+    els.statusEmoji.textContent = emoji;
+    els.statusText.textContent = text;
+    els.statusLink.hidden = !withLink;
+  }
+
+  async function openSharedCelebration(slug) {
+    showStatus('🎁', 'Unwrapping your celebration…', false);
+    try {
+      const res = await fetch(`celebrations/${slug}.json`, { cache: 'no-cache' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const parsed = parseCelebration(await res.json());
+      if (!parsed) throw new Error('Invalid celebration file');
+      photos = parsed.photos;
+      startParty(parsed.celebration, { shared: true });
+    } catch (err) {
+      console.error(err);
+      showStatus('🙈', "We couldn't find this celebration. The link may be wrong, or it isn't published yet.", true);
+    }
+  }
+
+  const sharedSlug = new URLSearchParams(window.location.search).get('for');
+  if (sharedSlug && SLUG_PATTERN.test(sharedSlug)) {
+    openSharedCelebration(sharedSlug);
+  } else if (sharedSlug) {
+    showStatus('🙈', "This celebration link doesn't look right.", true);
+  }
 
   document.documentElement.classList.remove('no-js');
 })();
